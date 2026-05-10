@@ -1,0 +1,123 @@
+---
+title: "Monitor riešení: Gaussova metóda"
+author: Aliaksandra Kibryk
+format:
+  dashboard:
+    embed-resources: true
+    theme: default
+    orientation: rows
+    expandable: true
+    scrolling: false
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+# nie je "for display"
+library(plotly)
+library(knitr)
+
+# Definícia matice koeficientov A, vektora pravých strán b a f-cie pre eliminaciu RowRed vektora pravých strán b
+A <- matrix(c(3, 2, -1,
+              2, -1, 4,
+              1, 1, -2), nrow = 3, byrow = TRUE)
+
+b <- c(1, -2, 0)
+
+RowRed <- function(A, b){
+  #spojime A a b do jednej rozširenej matice
+  Ab <- cbind(A, b)
+  #zistime dim(A), za predpokladu že A je štvorcova
+  n <- nrow(Ab)
+
+  #posuvame na na predposledni diagonalny prvok
+  for (i in 1:(n-1)){
+    #---mechanizmus na vymenu ridkov v pripade ak trapim na 0 na diagonale
+
+    #tu sa zisti max v stlpci a porovna sa s "počitačovou" nulou
+    pivot_indx <- which.max(abs(Ab[(i:n), i]))+i-1
+
+    if (abs(Ab[pivot_indx, i]) < 1e-15){
+      next
+    }
+
+    #samotna vymena
+    if (pivot_indx != i){
+      tmp_row <- Ab[i, ]
+      Ab[i, ] <- Ab[pivot_indx, ]
+      Ab[pivot_indx, ] <- tmp_row
+    }
+    #---
+    #tu potom prebieha eliminacia(dolny riadok - prislušny nasobok horneho)
+    for (j in (i+1):n){
+      factor <- Ab[j, i] / Ab[i, i]
+      Ab[j, ] <- Ab[j, ] - factor * Ab[i, ]
+    }
+  }
+  #zapsmall() vracia 0 namiesto nekonečne maleho zlomku
+  return(list(
+    A_Red = zapsmall(Ab[, 1:n]),
+    b_Red = zapsmall(Ab[, (n+1)])
+    )
+  )
+}
+
+# Riešenie sústavy
+ext_r <- RowRed(A, b)
+A_reduced <- ext_r$A_Red
+b_reduced <- ext_r$b_Red
+
+x_vysledok <- solve(A_reduced, b_reduced)
+det_A <- det(A_reduced)
+```
+
+## Row {height=200px}
+```{r}
+#| content: valuebox
+#| title: "Počet rovníc"
+
+list(icon = "list-ol", color = "primary", value = nrow(A_reduced))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Determinant matice A"
+
+list(icon = "calculator", color = "info", value = round(det_A, 2))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Stav systému"
+
+# Если детерминант не 0, система решаема
+list(icon = "check-circle", 
+     color = if(det_A != 0) "success" else "danger", 
+     value = if(det_A != 0) "Regular" else "Singular")
+```
+
+## Row {height=500px}
+```{r}
+#| title: "Interaktívna mapa hodnôt matice A"
+plot_ly(z = ~A_reduced, type = "heatmap", colorscale = "Viridis",
+        x = c("x1", "x2", "x3"), y = c("R1", "R2", "R3"))
+```
+
+Výsledky a interpretácia
+
+Vektor riešení $\vec{x}$:
+  
+Premenná Hodnota
+
+$x_1$ : `r round(x_vysledok[1], 2)` 
+
+$x_2$ : `r round(x_vysledok[2], 2)`
+
+$x_3$ : `r round(x_vysledok[3], 2)`
+
+Poznámka: Sústava bola vyriešená pomocou Gaussovej eliminácie. 
+Hodnoty v grafe vľavo znázorňujú váhu jednotlivých koeficientov v matici $A$.
+
+---

@@ -1,0 +1,124 @@
+---
+title: "Riešenie sústav lineárnych rovníc pomocou Gaussovej eliminačnej metódy"
+author: Aliaksandra Kibryk
+date: 2026-04-18
+format: 
+  revealjs:
+    embed-resources: true
+    transition: slide
+    scrollable: true
+    slide-number: true
+bibliography: liter.bib
+crossref:
+  eq-prefix: ""
+  fig-prefix: "Obr. "
+  tbl-prefix: "Tab. "
+  sec-prefix: "Kap. "
+---
+
+## Uvod
+V technickej praxi a inžinierskych disciplínach sa mimoriadne často stretávame s potrebou riešiť komplexné sústavy lineárnych rovníc. Pri analýze mechanických sústav, vyvažovaní síl v statike alebo pri výpočtoch v kinematike je často potrebné určiť viacero neznámych parametrov súčasne.
+
+---
+
+## Priklad
+pri analýze síl pôsobiacich na teleso na naklonenej rovine s viacerými väzbami (napríklad systém kladiek) vieme fyzikálny problém transformovať do matematického modelu reprezentovaného maticami. Efektívne riešenie takýchto modelov pomocou výpočtovej techniky a softvéru R je kľúčovým nástrojom moderného materiálového inžinierstva.
+
+---
+
+## Teoria
+Sústavu $n$ lineárnych rovníc o $n$ neznámych zapisujeme v maticovom tvare:
+
+$$
+\mathbf{A} \vec{x} = \vec{b}
+$$ {#eq-maticovy-tvar}
+
+Podľa Gaussovej metódy [@gauss_ref] transformujeme rozšírenú maticu $(\mathbf{A}|\vec{b})$ na hornú trojuholníkovú maticu pomocou elementárnych riadkových operácií.
+
+---
+
+## Praktická implementácia v R
+V systéme R môžeme sústavy riešiť priamo funkciou `solve()`, alebo simulovať proces eliminácie. Uvažujme nasledujúcu sústavu:
+
+```{r}
+#| echo: true
+#| label: vypocet
+#| warning: false
+
+# Definícia matice koeficientov A, vektora pravých strán b a f-cie pre eliminaciu RowRed vektora pravých strán b
+A <- matrix(c(3, 2, -1, 
+              2, -1, 4, 
+              1, 1, -2), nrow = 3, byrow = TRUE)
+
+b <- c(1, -2, 0)
+
+RowRed <- function(A, b){
+  #spojime A a b do jednej rozširenej matice
+  Ab <- cbind(A, b)
+  #zistime dim(A), za predpokladu že A je štvorcova
+  n <- nrow(Ab)
+
+  #posuvame na na predposledni diagonalny prvok
+  for (i in 1:(n-1)){
+    #---mechanizmus na vymenu ridkov v pripade ak trapim na 0 na diagonale
+
+    #tu sa zisti max v stlpci a porovna sa s "počitačovou" nulou
+    pivot_indx <- which.max(abs(Ab[(i:n), i]))+i-1
+
+    if (abs(Ab[pivot_indx, i]) < 1e-15){
+      next
+    }
+
+    #samotna vymena
+    if (pivot_indx != i){
+      tmp_row <- Ab[i, ]
+      Ab[i, ] <- Ab[pivot_indx, ]
+      Ab[pivot_indx, ] <- tmp_row
+    }
+    #---
+    #tu potom prebieha eliminacia(dolny riadok - prislušny nasobok horneho)
+    for (j in (i+1):n){
+      factor <- Ab[j, i] / Ab[i, i]
+      Ab[j, ] <- Ab[j, ] - factor * Ab[i, ]
+    }
+  }
+  #zapsmall() vracia 0 namiesto nekonečne maleho zlomku
+  return(list(
+    A_Red = zapsmall(Ab[, 1:n]),
+    b_Red = zapsmall(Ab[, (n+1)])
+    )
+  )
+}
+
+# Riešenie sústavy
+ext_r <- RowRed(A, b)
+x_vysledok <- solve(ext_r$A_Red, ext_r$b_Red)
+```
+
+Výsledný vektor riešení je $\vec{x} = (`r round(x_vysledok, 2)`)^T$.
+
+---
+
+## Vizualizácia matice
+Pre lepšiu interpretáciu môžeme zobraziť „teplotnú mapu“ (heatmap) koeficientov matice $\mathbf{A}$.
+```{r}
+#| echo: false
+#| label: fig-matrix
+#| fig-cap: "Vizualizácia hodnôt v matici koeficientov A"
+#| message: false
+
+  library(plotly)
+  plot_ly(z = ~ext_r$A_Red, type = "heatmap", colorscale = "Viridis")
+
+```
+
+---
+
+## Záver a zhodnotenie
+V tomto projekte sme demonštrovali silu systému R pri riešení lineárnych systémov. Metóda @eq-maticovy-tvar je základom pre zložitejšie algoritmy v materiálovom výskume. Kombinácia numerickej presnosti a možností vizualizácie (@fig-matrix) robí z Quarto ideálny nástroj pre technické správy.
+
+---
+
+## Literatura
+:::{#refs}
+:::
