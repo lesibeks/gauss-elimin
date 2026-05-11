@@ -24,7 +24,6 @@ crossref:
   fig-prefix: "Obr. "
   tbl-prefix: "Tab. "
   sec-prefix: "Kap. "
-   
 ---
 
 ## Motivačný úvod
@@ -102,7 +101,13 @@ x_vysledok <- solve(ext_r$A_Red, ext_r$b_Red)
 
 ```
 
-Výsledný vektor riešení je $\vec{x} = (`r round(x_vysledok, 2)`)^T$.
+|$x_i$|Hodnota|
+|:----:|:----:|
+|$x_1$|`r round(x_vysledok[1], 2)`|
+|$x_2$|`r round(x_vysledok[2], 2)`|
+|$x_3$|`r round(x_vysledok[3], 2)`|
+
+: Vysledny vektor riešeni {#tbl-x_vec}
 
 ## Vizualizácia matice
 Pre lepšiu interpretáciu môžeme zobraziť „teplotnú mapu“ (heatmap) koeficientov matice $\mathbf{A}$.
@@ -121,7 +126,7 @@ if (knitr::is_html_output()) {
 ```
 
 ## Záver a zhodnotenie
-V tomto projekte sme demonštrovali silu systému R pri riešení lineárnych systémov. Metóda @eq-maticovy-tvar je základom pre zložitejšie algoritmy v materiálovom výskume. Kombinácia numerickej presnosti a možností vizualizácie (@fig-matrix) robí z Quarto ideálny nástroj pre technické správy.
+V tomto projekte sme demonštrovali silu systému R pri riešení lineárnych systémov. Metóda @eq-maticovy-tvar je základom pre zložitejšie algoritmy v materiálovom výskume. Pomocou tabulkoveho tvaru (@tbl-x_vec) vieme aj pohodlne kontrolovať koeficienty. Kombinácia numerickej presnosti a možností vizualizácie (@fig-matrix) robí z Quarto ideálny nástroj pre technické správy.
 
 ## Literatura
 :::{#refs}
